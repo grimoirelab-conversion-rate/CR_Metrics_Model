@@ -1,0 +1,8 @@
+{
+  "gitee-mindspore": {
+    "git": ["https://gitee.com/openeuler/docs.git"],
+    "gitee": ["https://gitee.com/openeuler/docs"],
+    "gitee:pull": ["https://gitee.com/openeuler/docs"],
+    "gitee:repo": ["https://gitee.com/openeuler/docs"]
+  }
+}
