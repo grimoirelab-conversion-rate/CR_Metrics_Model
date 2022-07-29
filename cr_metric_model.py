@@ -54,6 +54,16 @@ def get_date_list(begin_date, end_date, freq="W-MON"):
     return date_list
 
 
+def get_all_repo(file, source):
+    """Get all repo from json file"""
+    all_repo_json = json.load(open(file))
+    all_repo = []
+    for i in all_repo_json:
+        for j in all_repo_json[i][source]:
+            all_repo.append(j)
+    return all_repo
+
+
 def get_all_project(file):
     """Get all projects from json file"""
     file_json = json.load(open(file))
@@ -311,6 +321,148 @@ class MetricsModel:
         return query
 
 
+class Activity_MetricsModel(MetricsModel):
+    def __init__(
+        self,
+        issue_index,
+        repo_index=None,
+        json_file=None,
+        git_index=None,
+        out_index=None,
+        git_branch=None,
+        from_date=None,
+        end_date=None,
+        community=None,
+        level=None,
+    ):
+        super().__init__(json_file, out_index, community, level)
+        self.issue_index = issue_index
+        self.repo_index = repo_index
+        self.git_index = git_index
+        self.git_branch = git_branch
+        self.date_list = get_date_list(from_date, end_date)
+        self.all_project = get_all_project(self.json_file)
+        self.all_repo = get_all_repo(self.json_file, self.issue_index.split("_")[0])
+
+    def countributor_count(self, date, repos_list):
+        query_author_uuid_data = self.get_uuid_count_contribute_query(
+            repos_list,
+            company=None,
+            from_date=(date - timedelta(days=90)),
+            to_date=date,
+        )
+        author_uuid_count = self.es_in.search(
+            index=(self.git_index, self.issue_index), body=query_author_uuid_data
+        )["aggregations"]["count_of_contributors"]["value"]
+        return author_uuid_count
+
+    def countributor_count_D2(self, date, repos_list):
+        query_author_uuid_data = self.get_uuid_count_contribute_query(
+            repos_list,
+            company=None,
+            from_date=(date - timedelta(days=90)),
+            to_date=date,
+        )
+        author_uuid_count = self.es_in.search(
+            index=(self.git_index), body=query_author_uuid_data
+        )["aggregations"]["count_of_contributors"]["value"]
+        return author_uuid_count
+
+    def commit_frequence(self, date, repos_list):
+        query_commit_frequency = self.get_uuid_count_query(
+            "cardinality",
+            repos_list,
+            "hash",
+            "grimoire_creation_date",
+            from_date=date - timedelta(days=90),
+            to_date=date,
+        )
+        commit_frequency = self.es_in.search(
+            index=self.git_index, body=query_commit_frequency
+        )["aggregations"]["count_of_uuid"]["value"]
+        return commit_frequency
+
+    def created_since(self, date, repos_list):
+        updated_since_list = []
+        for repo in repos_list:
+            query_first_commit_since = self.get_created_since_query(repo, order="asc")
+            first_commit_since = self.es_in.search(
+                index=self.git_index, body=query_first_commit_since
+            )["hits"]["hits"]
+            if len(first_commit_since) > 0:
+                creation_since = first_commit_since[0]["_source"][
+                    "grimoire_creation_date"
+                ]
+                updated_since_list.append(
+                    get_time_diff_months(creation_since, str(date))
+                )
+        if updated_since_list:
+            return sum(updated_since_list) / len(updated_since_list)
+        else:
+            return 0
+
+    def closed_issue_count(self, date, repos_list):
+        query_issue_closed = self.get_issue_closed_uuid_count(
+            "cardinality",
+            repos_list,
+            "uuid",
+            from_date=(date - timedelta(days=90)),
+            to_date=date,
+        )
+        issue_closed = self.es_in.search(
+            index=self.issue_index, body=query_issue_closed
+        )["aggregations"]["count_of_uuid"]["value"]
+        return issue_closed
+
+    def updated_issue_count(self, date, repos_list):
+        query_issue_updated_since = self.get_uuid_count_query(
+            "cardinality",
+            repos_list,
+            "uuid",
+            from_date=(date - timedelta(days=90)),
+            to_date=date,
+        )
+        updated_issues_count = self.es_in.search(
+            index=self.issue_index, body=query_issue_updated_since
+        )["aggregations"]["count_of_uuid"]["value"]
+        return updated_issues_count
+
+    def metrics_model_enrich(self, repos_list, label):
+        item_datas = []
+
+        for date in self.date_list:
+
+            print(date)
+
+            created_since = self.created_since(date, repos_list)
+
+            if created_since < 0:
+                continue
+
+            metrics_data = {
+                "uuid": uuid(str(date), self.community, self.level, label),
+                "level": self.level,
+                "label": label,
+                "contributor_count": self.countributor_count(date, repos_list),
+                "D2_contributor_count": self.countributor_count_D2(date, repos_list),
+                "commit_frequence": self.commit_frequence(date, repos_list),
+                "created_since": "%.4f" % self.created_since(date, repos_list),
+                "closed_issue_count": self.closed_issue_count(date, repos_list),
+                "updated_issue_count": self.updated_issue_count(date, repos_list),
+                "grimoire_creation_date": date.isoformat(),
+                "metadata__enriched_on": datetime_utcnow().isoformat(),
+            }
+
+            item_datas.append(metrics_data)
+
+            if len(item_datas) > MAX_BULK_UPDATE_SIZE:
+                self.es_out.bulk_upload(item_datas, "uuid")
+                item_datas = []
+
+        self.es_out.bulk_upload(item_datas, "uuid")
+
+        item_datas = []
+
 class ConversionRate_MetricsModel(MetricsModel):
     """
     TODO list what is needed for `ConversionRate_MetricsModel`
@@ -320,9 +472,10 @@ class ConversionRate_MetricsModel(MetricsModel):
 
 
 if __name__ == "__main__":
-    CONF = yaml.safe_load(open("conf.yaml"))
+    CONF = yaml.safe_load(open("config.yaml"))
     elastic_url = CONF["url"]
     kwargs = CONF["params"]
 
-    # TODO add running examples here 
-    
+    # TODO add running examples here
+    activity_model = Activity_MetricsModel(**kwargs)
+    activity_model.metrics_model_metrics()
