@@ -23,14 +23,14 @@ The Experimental Conversion Rate Metrics Model (WIP &amp; Unofficial). This proj
    url: "https://username:password@localhost:9200"
    params:
      issue_index: # Issue index
-     json_file: # json file for repos messages
-     git_index: # git index
-     git_branch: # None, leave it empty
-     from_date: # (default "1970-01-01") the beginning of time for metric model
-     end_date: # (default today) the end of time for metric model
-     out_index: # new index for metric model
-     community: # the name of community
-     level: # representation of the metrics, choose from repo, project or community.
+     json_file:   # json file for repos messages
+     git_index:   # Git index
+     git_branch:  # None, leave it empty
+     from_date:   # (default "1970-01-01") the beginning of time for metric model
+     end_date:    # (default today) the end of time for metric model
+     out_index:   # new index for metric model
+     community:   # the name of community
+     level:       # representation of the metrics, choose from repo, project or community.
    ```
 
 7. Create a `projects.json` file, and it's the same as the `projects.json` concept in grimoirelab. Since the script will use the repo URL to filter data, so please keep in mind that you should have collected the data before this process.
