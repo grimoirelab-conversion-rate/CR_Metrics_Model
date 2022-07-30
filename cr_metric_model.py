@@ -39,19 +39,17 @@ from grimoire_elk.elastic import ElasticSearch
 MAX_BULK_UPDATE_SIZE = 100
 
 
-def get_date_list(begin_date, end_date, freq="W-MON"):
-    """Get date list from begin_date to end_date every Monday"""
-    date_list = [
-        x
-        for x in list(
-            pd.date_range(
-                freq=freq,
-                start=datetime_to_utc(str_to_datetime(begin_date)),
-                end=datetime_to_utc(str_to_datetime(end_date)),
-            )
+def get_date_list(begin_date: str, end_date: str, freq: str = "W-MON"):
+    """Get date list of every Monday from `begin_date` to `end_date`
+
+    """
+    return list(
+        pd.date_range(
+            freq=freq,
+            start=datetime_to_utc(str_to_datetime(begin_date)),
+            end=datetime_to_utc(str_to_datetime(end_date)),
         )
-    ]
-    return date_list
+    )
 
 
 def get_all_repo(file, source):
