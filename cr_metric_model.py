@@ -42,6 +42,20 @@ MAX_BULK_UPDATE_SIZE = 100
 def get_date_list(begin_date: str, end_date: str, freq: str = "W-MON"):
     """Get date list of every Monday from `begin_date` to `end_date`
 
+    Examples:
+        ```python
+        >> get_date_list2("2022-01-01", "2022-01-30")
+        [
+            Timestamp("2022-01-03 00:00:00+0000", tz="tzutc()", freq="W-MON"),
+            Timestamp("2022-01-10 00:00:00+0000", tz="tzutc()", freq="W-MON"),
+            Timestamp("2022-01-17 00:00:00+0000", tz="tzutc()", freq="W-MON"),
+            Timestamp("2022-01-24 00:00:00+0000", tz="tzutc()", freq="W-MON"),
+        ]
+        ```
+    :param begin_date: begin date
+    :param end_date: end date
+    :param freq: use for `pandas.date_range`, defaults to "W-MON"
+    :return: a list of fixed frequency DatetimeIndex.
     """
     return list(
         pd.date_range(
@@ -460,6 +474,7 @@ class Activity_MetricsModel(MetricsModel):
         self.es_out.bulk_upload(item_datas, "uuid")
 
         item_datas = []
+
 
 class ConversionRate_MetricsModel(MetricsModel):
     """
