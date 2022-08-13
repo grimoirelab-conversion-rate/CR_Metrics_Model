@@ -77,12 +77,27 @@ def get_all_repo(file, source):
 
 
 def get_all_project(file):
-    """Get all projects from json file"""
-    file_json = json.load(open(file))
-    all_project = []
-    for i in file_json:
-        all_project.append(i)
-    return all_project
+    """Get all projects from json file
+
+    Json file example:
+
+    ```json
+    {
+      "gitee-mindspore": {
+        "git": ["https://gitee.com/openeuler/docs.git"],
+        "gitee": ["https://gitee.com/openeuler/docs"],
+        "gitee:pull": ["https://gitee.com/openeuler/docs"],
+        "gitee:repo": ["https://gitee.com/openeuler/docs"]
+      }
+    }
+    ```
+
+    :reaturn: the list of project name in the first level. in above
+    example, it returns `["gitee-mindspore"]`.
+    """
+    projects_json = json.load(open(file))
+    projects = [project_name for project_name in projects_json]
+    return projects
 
 
 def get_time_diff_months(start, end):
