@@ -500,6 +500,23 @@ class ConversionRate_MetricsModel(MetricsModel):
 
 
 if __name__ == "__main__":
+    """
+    An CONF example:
+
+    ```yaml
+        url: "ElasticSearch URL"
+        params:
+            issue_index: "gitee_issues-raw"
+            json_file: "./projects-gitee-tieway59-openeuler-docs.json"
+            git_index: "git"
+            git_branch:
+            from_date: "2022-01-01"
+            end_date: "2022-05-01"
+            out_index: "gitee_activity_enriched"
+            community: "gitee-mindspore"
+            level: "repo"
+    ```
+    """
     CONF = yaml.safe_load(open("config.yaml"))
     elastic_url = CONF["url"]
     kwargs = CONF["params"]
