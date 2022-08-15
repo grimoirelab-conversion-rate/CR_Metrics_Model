@@ -590,8 +590,14 @@ if __name__ == "__main__":
     """
     CONF = yaml.safe_load(open("config.yaml"))
     elastic_url = CONF["url"]
-    kwargs = CONF["params"]
+    params = CONF["params"]
 
     # TODO add running examples here
-    activity_model = Activity_MetricsModel(**kwargs)
-    activity_model.metrics_model_metrics()
+    
+    # activity_model = Activity_MetricsModel(**params)
+    # # a method in `class MetricsModel` which invokes
+    # # `metrics_model_enrich` in sub-class.
+    # activity_model.metrics_model_metrics(elastic_url)
+    
+    cr_model = ConversionRate_MetricsModel(**params)
+    cr_model.metrics_model_metrics(elastic_url)

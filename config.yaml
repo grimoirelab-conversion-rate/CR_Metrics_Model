@@ -6,6 +6,6 @@ params:
     git_branch:
     from_date: "2022-01-01"
     end_date: "2022-05-01"
-    out_index: "gitee_activity_enriched"
-    community: "gitee-mindspore"
+    out_index: "gitee_cr_test"
+    community: "gitee-openeuler-doc"
     level: "repo"
