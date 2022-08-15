@@ -524,6 +524,15 @@ class ConversionRate_MetricsModel(MetricsModel):
         self.es_in = None
         self.es_out = None
 
+    def get_l2_contributor_count():
+        return randint(5, 10)
+
+    def get_l1_contributor_count():
+        return randint(20, 30)
+
+    def get_l0_contributor_count():
+        return randint(40, 50)
+
     def metrics_model_enrich(self, repos_list, label):
         """Conduct metrics
 
@@ -535,11 +544,11 @@ class ConversionRate_MetricsModel(MetricsModel):
         for date in self.date_list:
 
             print(date)
-            
-            l2_contributor_count = randint(5, 10)
-            l1_contributor_count = randint(20, 30)
-            l0_contributor_count = randint(40, 50)
 
+            l2_contributor_count = self.get_l2_contributor_count()
+            l1_contributor_count = self.get_l1_contributor_count()
+            l0_contributor_count = self.get_l0_contributor_count()
+            
             contributor_count = l2_contributor_count + l1_contributor_count + l0_contributor_count
             
             conversion_rate_l0_l1 = l1_contributor_count / l0_contributor_count
@@ -593,11 +602,11 @@ if __name__ == "__main__":
     params = CONF["params"]
 
     # TODO add running examples here
-    
+
     # activity_model = Activity_MetricsModel(**params)
     # # a method in `class MetricsModel` which invokes
     # # `metrics_model_enrich` in sub-class.
     # activity_model.metrics_model_metrics(elastic_url)
-    
+
     cr_model = ConversionRate_MetricsModel(**params)
     cr_model.metrics_model_metrics(elastic_url)
