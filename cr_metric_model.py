@@ -21,6 +21,7 @@
 #     Chenqi Shan <chenqishan337@gmail.com>
 #     TieWay59 <tieway59@foxmail.com>
 
+from random import randint
 from perceval.backend import uuid
 from datetime import datetime, timedelta
 import json
@@ -497,6 +498,76 @@ class ConversionRate_MetricsModel(MetricsModel):
     TODO metrics_model_enrich
     TODO metrics_model_metrics
     """
+
+    def __init__(
+        self,
+        issue_index,
+        repo_index=None,
+        json_file=None,
+        git_index=None,
+        out_index=None,
+        git_branch=None,
+        from_date=None,
+        end_date=None,
+        community=None,
+        level=None,
+    ):
+        super().__init__(json_file, out_index, community, level)
+        self.issue_index = issue_index
+        self.repo_index = repo_index
+        self.git_index = git_index
+        self.git_branch = git_branch
+        self.date_list = get_date_list(from_date, end_date)
+        self.all_project = get_all_project(self.json_file)
+        # "gitee_issues-raw" -> "gitee"
+        self.all_repo = get_all_repo(self.json_file, self.issue_index.split("_")[0])
+        self.es_in = None
+        self.es_out = None
+
+    def metrics_model_enrich(self, repos_list, label):
+        """Conduct metrics
+
+        :param repos_list: _description_
+        :param label: list of the repo or project urls.
+        """
+        item_datas = []
+
+        for date in self.date_list:
+
+            print(date)
+            
+            l2_contributor_count = randint(5, 10)
+            l1_contributor_count = randint(20, 30)
+            l0_contributor_count = randint(40, 50)
+
+            contributor_count = l2_contributor_count + l1_contributor_count + l0_contributor_count
+            
+            conversion_rate_l0_l1 = l1_contributor_count / l0_contributor_count
+            conversion_rate_l1_l2 = l2_contributor_count / l1_contributor_count
+
+            metrics_data = {
+                "uuid": uuid(str(date), self.community, self.level, label),
+                "level": self.level,
+                "label": label,
+                "contributor_count": contributor_count,
+                "l2_contributor_count": l2_contributor_count,
+                "l1_contributor_count": l1_contributor_count,
+                "l0_contributor_count": l0_contributor_count,
+                "conversion_rate_l0_l1": conversion_rate_l0_l1,
+                "conversion_rate_l1_l2": conversion_rate_l1_l2,
+                "grimoire_creation_date": date.isoformat(),
+                "metadata__enriched_on": datetime_utcnow().isoformat(),
+            }
+
+            item_datas.append(metrics_data)
+
+            if len(item_datas) > MAX_BULK_UPDATE_SIZE:
+                self.es_out.bulk_upload(item_datas, "uuid")
+                item_datas = []
+
+        self.es_out.bulk_upload(item_datas, "uuid")
+
+        item_datas = []
 
 
 if __name__ == "__main__":
