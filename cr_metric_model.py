@@ -131,7 +131,7 @@ class MetricsModel:
         self.community = community
         self.level = level
 
-    def metrics_model_metrics(self):
+    def metrics_model_metrics(self, elastic_url):
         self.es_in = Elasticsearch(
             elastic_url,
             use_ssl=True,
